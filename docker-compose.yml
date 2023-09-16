@@ -1,0 +1,65 @@
+version: "3.8"
+
+services:
+  #----- wp
+  wp:
+    image: wordpress:latest
+    container_name: wordpress-docker #needed to identify the container
+    restart: unless-stopped
+    #volumes:
+      #- ./wordpress-files:/var/www/html  #this will create a wp folder in the root dir to save the changes
+    volumes:
+      - wordpress:/var/www/html
+    ports:
+      - 8888:80  
+    environment:
+        WORDPRESS_DB_HOST: db #identifies the db service
+        WORDPRESS_DB_USER: wp-user
+        WORDPRESS_DB_PASSWORD: wp-pass
+    depends_on:
+        - db
+    networks:
+        - WP_NET
+
+
+  #----- add phpmyadmin
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      PMA_HOST: db #identifies the db service
+      MYSQL_USER: wp-user
+      MYSQL_PASSWORD: wp-pass
+      MYSQL_ROOT_PASSWORD: rootPassword
+    depends_on:
+        - db
+    ports:
+      - 3001:80
+    networks:
+      - WP_NET      
+
+
+  #----- mysql
+  db:
+    image: mysql:8.0
+    container_name: wordpress-docker-db #needed for connecting with wp and phpmyadmin
+    tty: true # allows to connect with the db using the terminal 
+    #restart: unless-stopped
+    ports:
+      - 8889:3306
+    volumes:
+      - db_data:/var/lib/mysql
+    environment: 
+        MYSQL_ROOT_PASSWORD: rootPassword
+        MYSQL_DATABASE: wordpress
+        MYSQL_USER: wp-user
+        MYSQL_PASSWORD: wp-pass
+    networks:
+      - WP_NET
+
+
+
+volumes:
+  db_data:
+  wordpress:
+networks:
+  WP_NET:
